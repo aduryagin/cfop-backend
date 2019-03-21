@@ -1,0 +1,30 @@
+schema {
+    query: Query
+}
+
+type Query {
+  groups: [Group!]!
+  subgroups(groupID: ID!): [Subgroup!]!
+}
+
+type Group {
+  id: ID!
+  title: String!
+  description: String!
+}
+
+type Subgroup {
+  id: ID!
+  group_id: ID!
+  type: String!
+  name: String!
+  optimal_moves: String!
+  image_link: String!
+  algorithms: [Algorithm!]!
+}
+
+type Algorithm {
+  id: ID!
+  subgroup_id: ID!
+  algorithm: String!
+}
