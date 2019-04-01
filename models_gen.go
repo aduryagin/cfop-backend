@@ -9,9 +9,10 @@ type Algorithm struct {
 }
 
 type Group struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	ID          string     `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Subgroups   []Subgroup `json:"subgroups"`
 }
 
 type Subgroup struct {

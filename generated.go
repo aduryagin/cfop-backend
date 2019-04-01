@@ -48,11 +48,13 @@ type ComplexityRoot struct {
 		Id          func(childComplexity int) int
 		Title       func(childComplexity int) int
 		Description func(childComplexity int) int
+		Subgroups   func(childComplexity int) int
 	}
 
 	Query struct {
 		Groups    func(childComplexity int) int
 		Subgroups func(childComplexity int, groupID string) int
+		Group     func(childComplexity int, groupID string) int
 	}
 
 	Subgroup struct {
@@ -69,9 +71,25 @@ type ComplexityRoot struct {
 type QueryResolver interface {
 	Groups(ctx context.Context) ([]Group, error)
 	Subgroups(ctx context.Context, groupID string) ([]Subgroup, error)
+	Group(ctx context.Context, groupID string) (Group, error)
 }
 
 func field_Query_subgroups_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["groupID"]; ok {
+		var err error
+		arg0, err = graphql.UnmarshalID(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["groupID"] = arg0
+	return args, nil
+
+}
+
+func field_Query_group_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["groupID"]; ok {
@@ -186,6 +204,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Group.Description(childComplexity), true
 
+	case "Group.subgroups":
+		if e.complexity.Group.Subgroups == nil {
+			break
+		}
+
+		return e.complexity.Group.Subgroups(childComplexity), true
+
 	case "Query.groups":
 		if e.complexity.Query.Groups == nil {
 			break
@@ -204,6 +229,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Subgroups(childComplexity, args["groupID"].(string)), true
+
+	case "Query.group":
+		if e.complexity.Query.Group == nil {
+			break
+		}
+
+		args, err := field_Query_group_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Group(childComplexity, args["groupID"].(string)), true
 
 	case "Subgroup.id":
 		if e.complexity.Subgroup.Id == nil {
@@ -437,6 +474,11 @@ func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "subgroups":
+			out.Values[i] = ec._Group_subgroups(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -529,6 +571,66 @@ func (ec *executionContext) _Group_description(ctx context.Context, field graphq
 	return graphql.MarshalString(res)
 }
 
+// nolint: vetshadow
+func (ec *executionContext) _Group_subgroups(ctx context.Context, field graphql.CollectedField, obj *Group) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "Group",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subgroups, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]Subgroup)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: &res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				return ec._Subgroup(ctx, field.Selections, &res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
+}
+
 var queryImplementors = []string{"Query"}
 
 // nolint: gocyclo, errcheck, gas, goconst
@@ -561,6 +663,15 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			wg.Add(1)
 			go func(i int, field graphql.CollectedField) {
 				out.Values[i] = ec._Query_subgroups(ctx, field)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
+		case "group":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_group(ctx, field)
 				if out.Values[i] == graphql.Null {
 					invalid = true
 				}
@@ -705,6 +816,40 @@ func (ec *executionContext) _Query_subgroups(ctx context.Context, field graphql.
 	}
 	wg.Wait()
 	return arr1
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_group(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Query_group_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Group(rctx, args["groupID"].(string))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(Group)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+
+	return ec._Group(ctx, field.Selections, &res)
 }
 
 // nolint: vetshadow
@@ -2535,12 +2680,14 @@ var parsedSchema = gqlparser.MustLoadSchema(
 type Query {
   groups: [Group!]!
   subgroups(groupID: ID!): [Subgroup!]!
+  group(groupID: ID!): Group!
 }
 
 type Group {
   id: ID!
   title: String!
   description: String!
+  subgroups: [Subgroup!]!
 }
 
 type Subgroup {

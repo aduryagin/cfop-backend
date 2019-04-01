@@ -5,12 +5,14 @@ schema {
 type Query {
   groups: [Group!]!
   subgroups(groupID: ID!): [Subgroup!]!
+  group(groupID: ID!): Group!
 }
 
 type Group {
   id: ID!
   title: String!
   description: String!
+  subgroups: [Subgroup!]!
 }
 
 type Subgroup {
