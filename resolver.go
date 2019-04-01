@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	DB "github.com/aduryagin/cfop/backend/db"
+	DB "github.com/aduryagin/cfop-backend/db"
 )
 
 // Normalizers

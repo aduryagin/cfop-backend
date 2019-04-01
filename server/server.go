@@ -4,10 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-
+	cfop "github.com/aduryagin/cfop-backend"
+	DB "github.com/aduryagin/cfop-backend/db"
 	"github.com/99designs/gqlgen/handler"
-	cfop "github.com/aduryagin/cfop/backend"
-	DB "github.com/aduryagin/cfop/backend/db"
 	"github.com/go-chi/chi"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/rs/cors"
