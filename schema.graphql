@@ -6,6 +6,7 @@ type Query {
   groups: [Group!]!
   subgroups(groupID: ID!): [Subgroup!]!
   group(groupID: ID!): Group!
+  favorites(algorithmsIds: [ID!]!): [Subgroup!]!
 }
 
 type Group {
