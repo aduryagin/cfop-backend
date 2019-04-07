@@ -5,4 +5,4 @@ The CFOP Method (Cross – F2L – OLL – PLL), sometimes known as the Fridrich
 * gqlgen
 
 ## Development
-* go run server.go
+* go run server/server.go
