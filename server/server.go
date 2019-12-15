@@ -29,8 +29,7 @@ func main() {
 		AllowCredentials: true,
 	}).Handler)
 
-	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
-	router.Handle("/query", handler.GraphQL(cfop.NewExecutableSchema(cfop.Config{Resolvers: &cfop.Resolver{}})))
+	router.Handle("/api", handler.GraphQL(cfop.NewExecutableSchema(cfop.Config{Resolvers: &cfop.Resolver{}})))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground!", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
